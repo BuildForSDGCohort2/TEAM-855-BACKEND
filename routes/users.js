@@ -4,8 +4,11 @@ const bcrypt = require("bcryptjs");
 const { check, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
-const { SECRET } = require("../config/keys");
+const { SECRET, SENDGRID_API_KEY } = require("../config/keys");
 const User = require("../models/User");
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(SENDGRID_API_KEY);
+const crypto = require("crypto");
 
 /**
  * @route api/users/register-business
@@ -72,7 +75,8 @@ router.post("/register", [
         phoneNumber,
         email,
         password,
-        country
+        country,
+        emailToken: crypto.randomBytes(64).toString("hex")
     });
     // hash password
     bcrypt.genSalt(10, (err, salt) => {
@@ -82,6 +86,29 @@ router.post("/register", [
             };
             newUser.password = hash;
             newUser.save().then((user) => {
+                // email object
+                const message = {
+                    from: "khabubundivhu@gmail.com",
+                    to: user.email,
+                    subject: "Kulisha - Verify your account",
+                    text: `
+                        Hi thank you for creating an account on Kulisha.
+                        please click the link below to verify your account. 
+                        <a href="https//localhost:8000/verify-account/${user.emailToken}">Verify account</a>
+                    `,
+                    html: `
+                        <h1>Hi</h1>
+                        <p>Thank you for creating an account on Kulisha</p>
+                        <p>Pleas click the link below to verify your account</p>
+                        <a href="https://localhost:8000/verify-account/${user.emailToken}">Verify account</a>
+                    `
+                };
+                sgMail.send(message).then(() => {
+                    console.log('Message sent')
+                }).catch((error) => {
+                    console.log(error.response.body)
+                        // console.log(error.response.body.errors[0].message)
+                })
                 return res.status(201).json({
                     msg: "User was successfully created",
                     success: true,

@@ -14,6 +14,9 @@ const UserSchema = new Schema({
     email: {
         type: String,
     },
+    emailToken: {
+        type: String
+    },
     password: {
         type: String,
     },
