@@ -1,11 +1,38 @@
 {
-  "name": "kulisha-rest-api",
-  "version": "1.0.0",
-  "description": "Rest api for Kulisha",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC"
+    "name": "kulisha-rest-api",
+    "version": "1.0.0",
+    "description": "Rest api for Kulisha",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon app.js",
+        "lint": "eslint --fix"
+    },
+    "author": {
+        "email": "hello@khabubundivhu.co.za",
+        "name": "Khabubu Ndivhuwo",
+        "url": "https://khabubundivhu.co.za"
+    },
+    "license": "ISC",
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "body-parser": "^1.19.0",
+        "cors": "^2.8.5",
+        "dotenv": "^8.2.0",
+        "express": "^4.17.1",
+        "express-validator": "^6.6.1",
+        "jsonwebtoken": "^8.5.1",
+        "mongoose": "^5.10.0",
+        "passport": "^0.4.1",
+        "passport-jwt": "^4.0.0"
+    },
+    "devDependencies": {
+        "eslint": "^7.7.0",
+        "eslint-config-airbnb-base": "^14.2.0",
+        "eslint-config-prettier": "^6.11.0",
+        "eslint-plugin-import": "^2.22.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "nodemon": "^2.0.4",
+        "prettier": "^2.0.5"
+    }
 }
