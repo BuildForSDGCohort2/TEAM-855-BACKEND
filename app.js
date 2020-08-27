@@ -2,12 +2,16 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const helmet = require("helmet");
 const path = require("path");
 const passport = require("passport");
 const { PORT, MONGO_URI } = require("./config/keys")
 
 // init app
 const app = express();
+
+// add Helmet to enhance Api security
+app.use(helmet());
 
 /**
  * middlewares

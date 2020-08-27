@@ -4,11 +4,22 @@ const bcrypt = require("bcryptjs");
 const { check, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
-const { SECRET, SENDGRID_API_KEY } = require("../config/keys");
+const { SECRET } = require("../config/keys");
 const User = require("../models/User");
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(SENDGRID_API_KEY);
+const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+
+// config nodemailer transport
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_SMTP_HOST,
+    port: process.env.EMAIL_SMTP_PORT,
+    // secure: process.env.EMAIL_SMTP_SECURE, // lack of ssl commented this. You can uncomment it.
+    auth: {
+        user: process.env.EMAIL_SMTP_USERNAME,
+        pass: process.env.EMAIL_SMTP_PASSWORD
+    }
+});
 
 /**
  * @route api/users/register-business
@@ -33,8 +44,8 @@ router.post("/register", [
     .normalizeEmail()
     .isEmail(),
     // validate country
-    check("country")
-    .not().isEmpty().withMessage("Country is required"),
+    check("address")
+    .not().isEmpty().withMessage("Address is required"),
     //valiate password
     check(
         "password",
@@ -50,7 +61,7 @@ router.post("/register", [
     check('email').custom(value => {
         return User.findOne({ email: value }).then(user => {
             if (user) {
-                return Promise.reject('Email is already taken');
+                return Promise.reject("Email is already taken");
             }
         });
     })
@@ -58,7 +69,10 @@ router.post("/register", [
     // return validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(422).jsonp(errors.array());
+        return res.status(400).json({
+            errors: errors.array(),
+            success: false
+        });
     }
     let {
         firstName,
@@ -66,7 +80,7 @@ router.post("/register", [
         phoneNumber,
         email,
         password,
-        country
+        address
     } = req.body;
     // if all inputs are valid
     let newUser = new User({
@@ -75,7 +89,7 @@ router.post("/register", [
         phoneNumber,
         email,
         password,
-        country,
+        address,
         emailToken: crypto.randomBytes(64).toString("hex")
     });
     // hash password
@@ -88,27 +102,23 @@ router.post("/register", [
             newUser.save().then((user) => {
                 // email object
                 const message = {
-                    from: "khabubundivhu@gmail.com",
+                    from: "hello@khabubundivhu.co.za",
                     to: user.email,
                     subject: "Kulisha - Verify your account",
-                    text: `
-                        Hi thank you for creating an account on Kulisha.
-                        please click the link below to verify your account. 
-                        <a href="https//localhost:8000/verify-account/${user.emailToken}">Verify account</a>
-                    `,
                     html: `
-                        <h1>Hi</h1>
+                        <h1>Hi ${user.lastName} ${user.firstName}</h1>
                         <p>Thank you for creating an account on Kulisha</p>
                         <p>Pleas click the link below to verify your account</p>
                         <a href="https://localhost:8000/verify-account/${user.emailToken}">Verify account</a>
                     `
                 };
-                sgMail.send(message).then(() => {
-                    console.log('Message sent')
-                }).catch((error) => {
-                    console.log(error.response.body)
-                        // console.log(error.response.body.errors[0].message)
-                })
+                transporter.sendMail(message, function(error, info) {
+                    if (error) {
+                        console.log(error)
+                    } else {
+                        console.log("Email sent", info.response);
+                    }
+                });
                 return res.status(201).json({
                     msg: "User was successfully created",
                     success: true,
@@ -125,8 +135,16 @@ router.post("/register", [
  * @access Public
  */
 
-router.post("/login", (req, res) => {
-    User.findOne({ email: req.body.email }).then((user) => {
+router.post("/login", [
+    check("email").notEmpty(),
+    check("password").notEmpty(),
+
+], (req, res) => {
+    let {
+        email,
+        password
+    } = req.body;
+    User.findOne({ email: email }).then((user) => {
         if (!user) {
             return res.status(404).json({
                 message: "User not found",
@@ -134,14 +152,12 @@ router.post("/login", (req, res) => {
             });
         }
         // If user is found, compare passwords
-        bcrypt.compare(req.body.password, user.password).then(isMatch => {
+        bcrypt.compare(password, user.password).then(isMatch => {
             if (isMatch) {
                 const payload = {
                     _id: user._id,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    businessName: user.businessName,
-                    businessTelephone: user.businessTelephone,
                     email: user.email,
                     location: user.location,
                 };

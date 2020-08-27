@@ -23,7 +23,7 @@ const UserSchema = new Schema({
     confirmPassword: {
         type: String
     },
-    country: {
+    address: {
         type: String,
     },
     isVerified: {
