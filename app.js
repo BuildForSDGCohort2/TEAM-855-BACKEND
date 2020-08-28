@@ -31,7 +31,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 // config and connect mongodb
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }).then(() => {
     console.log(`Database connected successfully to ${MONGO_URI} 🚀`)
 }).catch((err) => {
     console.log(`Unable to connect to the database ${err} 🚩`);
