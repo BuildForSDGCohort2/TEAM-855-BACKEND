@@ -47,6 +47,9 @@ app.get("/", (req, res) => {
 // bring in user api route
 const users = require("./routes/users");
 app.use("/api/users", users);
+// bring in organisation api route
+const organisations = require("./routes/organisations");
+app.use("/api/organisations", organisations);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
