@@ -107,7 +107,32 @@ router.get("/my-organisations", passport.authenticate("jwt", { session: false })
             })
         })
     })
-})
+});
+
+/**
+ * @route GET api/organisations/organisation/:id
+ * @desc Get organisation by id
+ * @access private
+ */
+router.get("/organisation/:id", passport.authenticate("jwt", { session: false }), (req, res) => {
+    let id = req.params.id;
+    let userId = req.user._id;
+    // find organisation by id where userId is current loggedIn userId
+    Organisation.findById(id).where({ userId: userId }).then((organisation) => {
+        // if organisation is null return status 500
+        if (!organisation) {
+            res.status(500).json({
+                msg: "Organisation was not found",
+                success: false
+            })
+        }
+        // if not return status 200 with organisation object
+        res.status(200).json({
+            organisation,
+            success: true
+        })
+    })
+});
 
 
 module.exports = router;
